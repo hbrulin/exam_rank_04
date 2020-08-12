@@ -105,7 +105,7 @@ int add_arg(t_list *cmd, char *arg)
 	char **tmp = NULL; //double etoile
 	int i = 0;
 
-	if (!(tmp = (char **)malloc(sizeof(**tmp) * cmd->length + 2)))
+	if (!(tmp = (char **)malloc(sizeof(*tmp) * (cmd->length + 2)))) //only one *tmp + parenthesis
 		return(error_fatal());
 	//copy existing args
 	while (i < cmd->length)
