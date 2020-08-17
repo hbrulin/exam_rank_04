@@ -2,16 +2,17 @@
 #include <unistd.h>
 #include <string.h>
 
-#define END 0
-#define PIPE 1
-#define BREAK 2
+#define SIDEIN 1 //INVERSE, IMPORTANT
+#define SIDEOUT 0
 
 #define STDIN 0
 #define STDOUT 1
 #define STDERR 2
 
-#define SIDEIN 0
-#define SIDEOUT 1
+
+#define END 0
+#define PIPE 1
+#define BREAK 2
 
 //struct  with 6 elements
 typedef struct s_list 
@@ -157,24 +158,24 @@ int exec(t_list *cmd, char **env)
 	{
 		pipe_open = 1;
 		if (pipe(cmd->pipes))
-			return(error_fatal());
+			return (error_fatal());
 	}
 	pid = fork();
 	if (pid < 0)
-		return(error_fatal());
+		return (error_fatal());
 	else if (pid == 0)
-	{ //no else if 
+	{
 		if (cmd->type == PIPE && dup2(cmd->pipes[SIDEIN], STDOUT) < 0)
-			return(error_fatal());
+			return (error_fatal());
 		if (cmd->previous && cmd->previous->type == PIPE && dup2(cmd->previous->pipes[SIDEOUT], STDIN) < 0)
-			return(error_fatal());
+			return (error_fatal());
 		if ((ret = execve(cmd->args[0], cmd->args, env)) < 0)
 		{
 			show_error("error: cannot execute ");
 			show_error(cmd->args[0]);
 			show_error("\n");
 		}
-		exit(ret); //outside of if condition
+		exit(ret);
 	}
 	else
 	{
@@ -190,7 +191,7 @@ int exec(t_list *cmd, char **env)
 		if (WIFEXITED(status))
 			ret = WEXITSTATUS(status);
 	}
-	return(ret);
+	return (ret);
 }
 
 int exec_cmds(t_list **cmds, char **env)
@@ -256,8 +257,7 @@ int main(int argc, char **argv, char **envp)
 		ret = exec_cmds(&cmds, envp);
 	}
 	list_clear(&cmds);
-	while (1)
-		;
+	while (1);
 	return (ret);
 
 	//system("leaks micro");

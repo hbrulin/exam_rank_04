@@ -2,23 +2,23 @@
 #include <unistd.h>
 #include <string.h>
 
+#define SIDE_IN 1
+#define SIDE_OUT 0
+
 #define STDIN 0
 #define STDOUT 1
 #define STDERR 2
-
-#define SIDE_IN 1
-#define SIDE_OUT 0
 
 #define END 0
 #define PIPE 1
 #define BREAK 2
 
-typedef struct s_list 
+typedef struct s_list
 {
 	char **args;
-	int length;
-	int type;
 	int pipes[2];
+	int type;
+	int length;
 	struct s_list *next;
 	struct s_list *previous;
 }				t_list;
@@ -52,10 +52,18 @@ void *error_fatal_ptr()
 	return(NULL);
 }
 
+int list_rewind(t_list **list)
+{
+	while (*list && (*list)->previous)
+		*list = (*list)->previous;
+	return(EXIT_SUCCESS);
+}
+
 char *ft_strdup(char *s)
 {
-	char *dst = NULL;
+	char *dst;
 	int i = 0;
+
 	if(!(dst = (char *)malloc(sizeof(*dst) * (ft_strlen(s) + 1))))
 		return(error_fatal_ptr());
 	while (s[i])
@@ -67,30 +75,23 @@ char *ft_strdup(char *s)
 	return(dst);
 }
 
-int list_rewind(t_list **list)
-{
-	while (*list && (*list)->previous)
-		*list = (*list)->previous;
-	return(EXIT_SUCCESS);
-}
-
 int list_clear(t_list **list)
 {
 	t_list *tmp;
 	int i;
 	list_rewind(list);
 
-	while (*list)
+	while(*list)
 	{
 		tmp = (*list)->next;
 		i = 0;
-		while((*list)->args[i])
+		while (i < (*list)->length) //comparer avec i plutot que while exists
 			free((*list)->args[i++]);
 		free((*list)->args);
 		free(*list);
 		*list = tmp;
 	}
-	//DONT FORGET LIST = NULL
+	*list = NULL;
 	return(EXIT_SUCCESS);
 }
 
@@ -115,22 +116,22 @@ int add_arg(t_list *cmd, char *arg)
 	return(EXIT_SUCCESS);
 }
 
-int push_list(t_list **cmds, char *arg)
+int push_list(t_list **list, char *arg)
 {
-	t_list *new = NULL;
-	if(!(new = (t_list *)malloc(sizeof(*new))))
+	t_list *new;
+	if (!(new = (t_list *)malloc(sizeof(*new))))
 		return(error_fatal());
+	new->args = NULL;
 	new->type = END;
 	new->length = 0;
-	new->args = NULL;
 	new->next = NULL;
 	new->previous = NULL;
-	if (*cmds)
+	if (*list)
 	{
-		(*cmds)->next = new;
-		new->previous = *cmds;
+		(*list)->next = new;
+		new->previous = *list;
 	}
-	*cmds = new;
+	*list = new;
 	return(add_arg(new, arg));
 }
 
@@ -147,15 +148,17 @@ int parse_arg(t_list **cmds, char *arg)
 	else if (is_break)
 		(*cmds)->type = BREAK;
 	else
+	{
 		return(add_arg(*cmds, arg));
+	}
 	return(EXIT_SUCCESS);
 }
 
 int exec(t_list *cmd, char **env)
 {
-	int ret = EXIT_FAILURE;
 	int pipe_open = 0;
 	int status;
+	int ret = EXIT_FAILURE;
 	pid_t pid;
 
 	if (cmd->type == PIPE || (cmd->previous && cmd->previous->type == PIPE))
@@ -164,6 +167,7 @@ int exec(t_list *cmd, char **env)
 		if (pipe(cmd->pipes))
 			return(error_fatal());
 	}
+
 	pid = fork();
 	if (pid < 0)
 		return(error_fatal());
@@ -196,6 +200,7 @@ int exec(t_list *cmd, char **env)
 			ret = WEXITSTATUS(status);
 	}
 	return(ret);
+
 }
 
 int exec_cmds(t_list **cmds, char **env)
@@ -210,7 +215,7 @@ int exec_cmds(t_list **cmds, char **env)
 		{
 			if (cur->length < 2)
 				ret = show_error("error: cd: bad arguments\n");
-			else if (chdir(cur->args[1]))
+			else if(chdir(cur->args[1]))
 			{
 				ret = show_error("error: cd: cannot change directory to ");
 				show_error(cur->args[1]);
@@ -218,9 +223,7 @@ int exec_cmds(t_list **cmds, char **env)
 			}
 		}
 		else
-		{
 			ret = exec(cur, env);
-		}
 		if (!(*cmds)->next)
 			break;
 		*cmds = (*cmds)->next;
@@ -230,9 +233,9 @@ int exec_cmds(t_list **cmds, char **env)
 
 int main(int argc, char **argv, char **env)
 {
+	t_list *cmds = NULL;
 	int ret = EXIT_SUCCESS;
 	int i = 1;
-	t_list *cmds = NULL;
 
 	while (i < argc)
 		parse_arg(&cmds, argv[i++]);
@@ -244,29 +247,3 @@ int main(int argc, char **argv, char **env)
 	list_clear(&cmds);
 	return(ret);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -6,8 +6,8 @@
 #define STDOUT 1
 #define STDERR 2
 
-#define SIDE_IN 0
-#define SIDE_OUT 1
+#define SIDE_IN 1
+#define SIDE_OUT 0
 
 #define END 0
 #define PIPE 1

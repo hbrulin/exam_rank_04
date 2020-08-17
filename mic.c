@@ -11,8 +11,8 @@
 #define PIPE 1
 #define BREAK 2
 
-#define SIDE_IN 0
-#define SIDE_OUT 1
+#define SIDE_IN 1
+#define SIDE_OUT 0
 
 typedef struct s_list 
 {

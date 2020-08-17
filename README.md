@@ -21,7 +21,7 @@ Ecrire un programme qui aura ressemblera à un executeur de commande shell
 - Votre programme devrait pouvoir accepter des centaines de "|" meme si la limite du nombre de "fichier ouvert" est inferieur à 30.
 
 Par exemple, la commande suivante doit marcher:
-$>./microshell /bin/ls | /usr/bin/grep microshell ; /bin/echo i love my microshell
+$>./microshell /bin/ls "|" /usr/bin/grep microshell ";" /bin/echo i love my microshell
 microshell
 i love my microshell
 $>
